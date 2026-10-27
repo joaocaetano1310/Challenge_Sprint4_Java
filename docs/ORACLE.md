@@ -15,6 +15,10 @@ A aplicação prepara, mas não executou no servidor da FIAP, estas mudanças:
 
 Os nomes das colunas originais e os dados de usuários/animais/vacinas/consultas não são removidos. A conversão de senha altera o conteúdo de SENHA e é irreversível sem backup.
 
+### Sprint 4
+
+A `V4__notificacoes.sql` cria a sequence `FV_SEQ_NOTIFICACAO` e a tabela `TB_FV_NOTIFICACAO` (FK para `TB_USUARIO`). Ela só acrescenta objetos novos e não altera tabelas existentes. Em um banco que já está na V3, basta subir a aplicação com `DB_MIGRATIONS_ENABLED=true`.
+
 ## Antes da atualização
 
 - Confirme com o responsável pelo banco o uso dessas extensões. Faça backup recuperável e valide inicialmente em uma cópia do schema.
@@ -35,18 +39,18 @@ $env:DB_PASSWORD = 'SUA_SENHA'
 $env:DB_EXISTENTE = 'true'
 $env:DB_MIGRATIONS_ENABLED = 'true'
 $env:FV_PRIMEIRO_ADMIN_EMAIL = 'EMAIL_DE_UM_USUARIO_EXISTENTE'
-java -jar executavel/futurevet.jar
+java -jar target/futurevet.jar
 ```
 
 As credenciais acima são placeholders. Não salve valores reais em arquivos versionados. O e-mail de administrador é uma conta já existente no banco, escolhida explicitamente pelo responsável. A promoção acontece apenas quando não há nenhum ADMIN; a variável não redefine senha nem promove novas contas em todo reinício.
 
-DB_EXISTENTE=true cria o baseline 1 no novo histórico e executa V2/V3. Só use isso se a V1 já estiver representada pelo schema correto. O baseline não valida a equivalência estrutural automaticamente. A V2 verifica e-mails repetidos por caixa e horários inválidos antes de executar seu DDL, mas isso não substitui o preflight.
+DB_EXISTENTE=true cria o baseline 1 no novo histórico e executa V2, V3 e V4. Só use isso se a V1 já estiver representada pelo schema correto. O baseline não valida a equivalência estrutural automaticamente. A V2 verifica e-mails repetidos por caixa e horários inválidos antes de executar seu DDL, mas isso não substitui o preflight.
 
 Depois da adoção, remova FV_PRIMEIRO_ADMIN_EMAIL e DB_EXISTENTE das variáveis; pode manter Flyway ativado para validar o histórico. Se não quiser migrations automáticas em execuções de uso, deixe DB_MIGRATIONS_ENABLED=false após aplicar e verificar as versões. Não altere conteúdo de migrations que já foram aplicadas.
 
 ## Oracle novo e vazio
 
-Use o mesmo procedimento com DB_EXISTENTE=false, sem FV_PRIMEIRO_ADMIN_EMAIL inicialmente. Flyway aplica V1, V2 e V3. Não há usuários de teste nem carga fictícia nesse perfil. Cadastre o primeiro tutor pela tela; pare a aplicação; indique o e-mail dele em FV_PRIMEIRO_ADMIN_EMAIL e reinicie para torná-lo administrador. Remova a variável em seguida.
+Use o mesmo procedimento com DB_EXISTENTE=false, sem FV_PRIMEIRO_ADMIN_EMAIL inicialmente. Flyway aplica V1, V2, V3 e V4. Não há usuários de teste nem carga fictícia nesse perfil. Cadastre o primeiro tutor pela tela; pare a aplicação; indique o e-mail dele em FV_PRIMEIRO_ADMIN_EMAIL e reinicie para torná-lo administrador. Remova a variável em seguida.
 
 ## Erros e limites
 
@@ -59,4 +63,4 @@ Use o mesmo procedimento com DB_EXISTENTE=false, sem FV_PRIMEIRO_ADMIN_EMAIL ini
 
 ## Verificação após migrar a cópia
 
-Confirme o histórico até V3, os totais de linhas antes/depois, PK/FK, leitura de dados legados com nulos, login com uma conta legada, criação de novos IDs, os dois perfis e os dois fluxos. Repita criação concorrente de consultas em duas sessões. Somente depois valide a mesma operação no schema oficial. **Essa verificação Oracle não foi realizada nesta entrega.**
+Confirme o histórico até V4, os totais de linhas antes/depois, PK/FK, leitura de dados legados com nulos, login com uma conta legada, criação de novos IDs, os dois perfis e os dois fluxos. Repita criação concorrente de consultas em duas sessões. Somente depois valide a mesma operação no schema oficial. **Essa verificação Oracle não foi realizada nesta entrega.**

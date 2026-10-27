@@ -1,21 +1,31 @@
 package com.futurevet.web;
 
-import com.futurevet.service.*;
+import com.futurevet.service.AnimalService;
 import com.futurevet.web.forms.AnimalForm;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/animais")
 public class AnimalController {
-    private final AnimalService service;
+    private static final String FORM = "animal-form";
+    private static final String LISTA = "/animais";
 
-    public AnimalController(AnimalService service) {
+    private final AnimalService service;
+    private final Feedback feedback;
+
+    public AnimalController(AnimalService service, Feedback feedback) {
         this.service = service;
+        this.feedback = feedback;
     }
 
     @GetMapping
@@ -27,22 +37,14 @@ public class AnimalController {
     @GetMapping("/novo")
     public String novo(Model m) {
         m.addAttribute("form", new AnimalForm());
-        return "animal-form";
+        return FORM;
     }
 
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable long id, Model m) {
-        var a = service.buscar(id);
-        AnimalForm f = new AnimalForm();
-        f.setNome(a.nome());
-        f.setEspecie(a.especie());
-        f.setRaca(a.raca());
-        f.setIdade(a.idade());
-        f.setPorte(a.porte());
-        f.setPeso(a.peso());
-        m.addAttribute("form", f);
+        m.addAttribute("form", AnimalForm.de(service.buscar(id)));
         m.addAttribute("id", id);
-        return "animal-form";
+        return FORM;
     }
 
     @PostMapping("/salvar")
@@ -52,20 +54,12 @@ public class AnimalController {
             service.buscar(id);
         m.addAttribute("id", id);
         if (b.hasErrors())
-            return "animal-form";
-        service.salvar(id, f);
-        r.addFlashAttribute("sucesso", "Animal salvo com sucesso.");
-        return "redirect:/animais";
+            return FORM;
+        return feedback.executar(() -> service.salvar(id, f), "sucesso.animal.salvo", LISTA, r);
     }
 
     @PostMapping("/{id}/excluir")
     public String excluir(@PathVariable long id, RedirectAttributes r) {
-        try {
-            service.excluir(id);
-            r.addFlashAttribute("sucesso", "Animal excluído.");
-        } catch (RegraException e) {
-            r.addFlashAttribute("erro", e.getMessage());
-        }
-        return "redirect:/animais";
+        return feedback.executar(() -> service.excluir(id), "sucesso.animal.excluido", LISTA, r);
     }
 }

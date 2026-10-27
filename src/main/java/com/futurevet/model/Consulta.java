@@ -1,18 +1,19 @@
 package com.futurevet.model;
 
+import java.time.LocalDate;
+
 public record Consulta(long id, long animalId, String animal, long usuarioId, String tutor, String tipo,
-        java.time.LocalDate data, String hora, String local, String status, String observacao) {
-    public String statusDescricao() {
-        return switch (status) {
-        case "AGENDADA" -> "Aguardando confirmação";
-        case "CONFIRMADA" -> "Confirmada";
-        case "REALIZADA" -> "Realizada";
-        case "CANCELADA" -> "Cancelada";
-        default -> "Situação não informada";
-        };
-    }
+        LocalDate data, String hora, String local, StatusConsulta status, String observacao) {
 
     public boolean ativa() {
-        return java.util.Set.of("AGENDADA", "CONFIRMADA", "INDEFINIDA").contains(status);
+        return status.ativa();
+    }
+
+    public boolean aguardandoConfirmacao() {
+        return status == StatusConsulta.AGENDADA;
+    }
+
+    public boolean confirmada() {
+        return status == StatusConsulta.CONFIRMADA;
     }
 }

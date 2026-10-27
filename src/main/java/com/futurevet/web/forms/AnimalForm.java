@@ -1,6 +1,13 @@
 package com.futurevet.web.forms;
 
-import jakarta.validation.constraints.*;
+import com.futurevet.model.Animal;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
 
 public class AnimalForm {
     @NotBlank
@@ -63,13 +70,24 @@ public class AnimalForm {
     @DecimalMin("0.01")
     @DecimalMax("999.99")
     @Digits(integer = 3, fraction = 2)
-    private java.math.BigDecimal peso;
+    private BigDecimal peso;
 
-    public java.math.BigDecimal getPeso() {
+    public BigDecimal getPeso() {
         return peso;
     }
 
-    public void setPeso(java.math.BigDecimal value) {
+    public void setPeso(BigDecimal value) {
         this.peso = value;
+    }
+
+    public static AnimalForm de(Animal a) {
+        AnimalForm f = new AnimalForm();
+        f.setNome(a.nome());
+        f.setEspecie(a.especie());
+        f.setRaca(a.raca());
+        f.setIdade(a.idade());
+        f.setPorte(a.porte());
+        f.setPeso(a.peso());
+        return f;
     }
 }

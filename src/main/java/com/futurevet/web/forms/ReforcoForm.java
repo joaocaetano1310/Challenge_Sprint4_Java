@@ -1,18 +1,23 @@
 package com.futurevet.web.forms;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 
 public class ReforcoForm {
     @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private java.time.LocalDate data;
+    private LocalDate data;
 
-    public java.time.LocalDate getData() {
+    public LocalDate getData() {
         return data;
     }
 
-    public void setData(java.time.LocalDate value) {
+    public void setData(LocalDate value) {
         this.data = value;
     }
 

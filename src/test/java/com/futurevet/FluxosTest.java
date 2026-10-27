@@ -1,5 +1,7 @@
 package com.futurevet;
 
+import com.futurevet.model.SituacaoVacina;
+import com.futurevet.model.StatusConsulta;
 import com.futurevet.repository.*;
 import com.futurevet.service.*;
 import com.futurevet.web.forms.*;
@@ -73,7 +75,7 @@ class FluxosTest {
     void todasAsTelasDoTutorRenderizam() throws Exception {
         for (String url : new String[] { "/", "/animais", "/animais/novo", "/animais/1/editar", "/consultas",
                 "/consultas/nova", "/consultas/1/reagendar", "/vacinas", "/vacinas/nova", "/vacinas/1/editar",
-                "/vacinas/1/reforco" })
+                "/vacinas/1/reforco", "/notificacoes", "/assistente" })
             mvc.perform(get(url)).andExpect(status().isOk())
                     .andExpect(content().contentTypeCompatibleWith("text/html"));
     }
@@ -81,7 +83,8 @@ class FluxosTest {
     @Test
     @WithMockUser(username = "clinica@futurevet.local", roles = "ADMIN")
     void telasDaClinicaRenderizam() throws Exception {
-        for (String url : new String[] { "/", "/animais", "/consultas", "/vacinas", "/admin/usuarios" })
+        for (String url : new String[] { "/", "/animais", "/consultas", "/vacinas", "/admin/usuarios",
+                "/admin/monitoramento", "/notificacoes", "/assistente" })
             mvc.perform(get(url)).andExpect(status().isOk());
     }
 
@@ -100,6 +103,7 @@ class FluxosTest {
         assertThatThrownBy(() -> carteira.excluir(1)).isInstanceOf(AccessDeniedException.class);
         mvc.perform(get("/animais/1/editar")).andExpect(status().isForbidden());
         mvc.perform(get("/admin/usuarios")).andExpect(status().isForbidden());
+        mvc.perform(get("/admin/monitoramento")).andExpect(status().isForbidden());
         mvc.perform(post("/animais/1/excluir").with(csrf())).andExpect(status().isForbidden());
     }
 
@@ -108,10 +112,10 @@ class FluxosTest {
     void agendamentoBloqueiaConflitoECancelamentoLiberaHorario() {
         AgendaForm f = agendamento();
         long id = agenda.agendar(f);
-        assertThat(agenda.buscar(id).status()).isEqualTo("AGENDADA");
+        assertThat(agenda.buscar(id).status()).isEqualTo(StatusConsulta.AGENDADA);
         assertThatThrownBy(() -> agenda.agendar(f)).isInstanceOf(RegraException.class);
         agenda.cancelar(id, "Mudança de planos");
-        assertThat(agenda.buscar(id).status()).isEqualTo("CANCELADA");
+        assertThat(agenda.buscar(id).status()).isEqualTo(StatusConsulta.CANCELADA);
         assertThat(agenda.agendar(f)).isPositive();
     }
 
@@ -128,12 +132,12 @@ class FluxosTest {
     void fluxoDaClinicaConfirmaEConcluiSomenteAposHorario() {
         long id = agenda.agendar(agendamento());
         agenda.confirmar(id);
-        assertThat(agenda.buscar(id).status()).isEqualTo("CONFIRMADA");
+        assertThat(agenda.buscar(id).status()).isEqualTo(StatusConsulta.CONFIRMADA);
         assertThatThrownBy(() -> agenda.concluir(id, "Tudo bem")).isInstanceOf(RegraException.class);
         db.update("UPDATE TB_CONSULTA SET DATA_CONSULTA=? WHERE ID_CONSULTA=?",
                 LocalDate.now(clock).minusDays(1), id);
         agenda.concluir(id, "Atendimento concluído");
-        assertThat(agenda.buscar(id).status()).isEqualTo("REALIZADA");
+        assertThat(agenda.buscar(id).status()).isEqualTo(StatusConsulta.REALIZADA);
         assertThatThrownBy(() -> agenda.cancelar(id, "teste")).isInstanceOf(RegraException.class);
     }
 
@@ -146,7 +150,7 @@ class FluxosTest {
         f.setHora(LocalTime.of(12, 0));
         agenda.reagendar(id, f);
         assertThat(agenda.buscar(id).hora()).isEqualTo("12:00");
-        assertThat(agenda.buscar(id).status()).isEqualTo("AGENDADA");
+        assertThat(agenda.buscar(id).status()).isEqualTo(StatusConsulta.AGENDADA);
     }
 
     @Test
@@ -172,7 +176,7 @@ class FluxosTest {
         f.setLocal("Clínica");
         long novo = carteira.reforcar(1, f);
         assertThat(carteira.buscar(novo).proximaDose()).isEqualTo(LocalDate.now(clock).plusMonths(12));
-        assertThat(carteira.classificar(carteira.buscar(1)).situacao()).isEqualTo("HISTORICO");
+        assertThat(carteira.classificar(carteira.buscar(1)).situacao()).isEqualTo(SituacaoVacina.HISTORICO);
         assertThatThrownBy(() -> carteira.reforcar(1, f)).isInstanceOf(RegraException.class);
         assertThatThrownBy(() -> carteira.excluir(1)).isInstanceOf(RegraException.class);
     }
@@ -181,7 +185,7 @@ class FluxosTest {
     @WithMockUser(username = "tutor@futurevet.local", roles = "TUTOR")
     void doseSemProximaDataNaoInventaPrazo() {
         var item = carteira.classificar(carteira.buscar(3));
-        assertThat(item.situacao()).isEqualTo("SEM_PREVISAO");
+        assertThat(item.situacao()).isEqualTo(SituacaoVacina.SEM_PREVISAO);
         assertThat(item.dias()).isNull();
     }
 

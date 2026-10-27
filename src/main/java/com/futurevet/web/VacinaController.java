@@ -1,54 +1,57 @@
 package com.futurevet.web;
 
-import com.futurevet.service.*;
-import com.futurevet.web.forms.*;
+import com.futurevet.model.SituacaoVacina;
+import com.futurevet.service.AnimalService;
+import com.futurevet.service.CarteiraService;
+import com.futurevet.service.RegraException;
+import com.futurevet.web.forms.ReforcoForm;
+import com.futurevet.web.forms.VacinaForm;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/vacinas")
 public class VacinaController {
+    private static final String FORM = "vacina-form";
+    private static final String FORM_REFORCO = "reforco-form";
+    private static final String LISTA = "/vacinas";
+
     private final CarteiraService service;
     private final AnimalService animais;
+    private final Feedback feedback;
 
-    public VacinaController(CarteiraService service, AnimalService animais) {
+    public VacinaController(CarteiraService service, AnimalService animais, Feedback feedback) {
         this.service = service;
         this.animais = animais;
+        this.feedback = feedback;
     }
 
     @GetMapping
     public String listar(Model m) {
         var itens = service.listar();
         m.addAttribute("itens", itens);
-        m.addAttribute("atrasadas", itens.stream().filter(i -> i.situacao().equals("ATRASADA")).count());
-        m.addAttribute("proximas", itens.stream().filter(i -> i.situacao().equals("PROXIMA")).count());
+        m.addAttribute("atrasadas", itens.stream().filter(i -> i.situacao() == SituacaoVacina.ATRASADA).count());
+        m.addAttribute("proximas", itens.stream().filter(i -> i.situacao() == SituacaoVacina.PROXIMA).count());
         return "vacinas";
     }
 
     @GetMapping("/nova")
     public String nova(Model m) {
-        m.addAttribute("form", new VacinaForm());
-        m.addAttribute("animais", animais.listar());
-        return "vacina-form";
+        return formulario(new VacinaForm(), null, m);
     }
 
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable long id, Model m) {
-        var v = service.buscar(id);
-        VacinaForm f = new VacinaForm();
-        f.setAnimalId(v.animalId());
-        f.setNome(v.nome());
-        f.setData(v.data());
-        f.setProximaDose(v.proximaDose());
-        f.setLocal(v.local());
-        m.addAttribute("form", f);
-        m.addAttribute("id", id);
-        m.addAttribute("animais", animais.listar());
-        return "vacina-form";
+        return formulario(VacinaForm.de(service.buscar(id)), id, m);
     }
 
     @PostMapping("/salvar")
@@ -56,52 +59,51 @@ public class VacinaController {
             BindingResult b, Model m, RedirectAttributes r) {
         if (id != null)
             service.buscar(id);
-        m.addAttribute("id", id);
-        m.addAttribute("animais", animais.listar());
+        formulario(f, id, m);
         if (b.hasErrors())
-            return "vacina-form";
+            return FORM;
         try {
             service.salvar(id, f);
         } catch (RegraException e) {
-            b.reject("regra", e.getMessage());
-            return "vacina-form";
+            b.reject(e.getCodigo(), e.getArgumentos(), e.getCodigo());
+            return FORM;
         }
-        r.addFlashAttribute("sucesso", "Vacina salva na carteira.");
-        return "redirect:/vacinas";
+        feedback.sucesso(r, "sucesso.vacina.salva");
+        return "redirect:" + LISTA;
     }
 
     @GetMapping("/{id}/reforco")
     public String reforco(@PathVariable long id, Model m) {
         m.addAttribute("dose", service.buscar(id));
         m.addAttribute("form", new ReforcoForm());
-        return "reforco-form";
+        return FORM_REFORCO;
     }
 
     @PostMapping("/{id}/reforco")
-    public String reforcar(@PathVariable long id, @Valid @ModelAttribute("form") ReforcoForm f,
-            BindingResult b, Model m, RedirectAttributes r) {
+    public String reforcar(@PathVariable long id, @Valid @ModelAttribute("form") ReforcoForm f, BindingResult b,
+            Model m, RedirectAttributes r) {
         m.addAttribute("dose", service.buscar(id));
         if (b.hasErrors())
-            return "reforco-form";
+            return FORM_REFORCO;
         try {
             service.reforcar(id, f);
         } catch (RegraException e) {
-            b.reject("regra", e.getMessage());
-            return "reforco-form";
+            b.reject(e.getCodigo(), e.getArgumentos(), e.getCodigo());
+            return FORM_REFORCO;
         }
-        r.addFlashAttribute("sucesso",
-                "Reforço registrado. Próxima dose calculada e dose anterior preservada no histórico.");
-        return "redirect:/vacinas";
+        feedback.sucesso(r, "sucesso.vacina.reforco");
+        return "redirect:" + LISTA;
     }
 
     @PostMapping("/{id}/excluir")
     public String excluir(@PathVariable long id, RedirectAttributes r) {
-        try {
-            service.excluir(id);
-            r.addFlashAttribute("sucesso", "Vacina excluída.");
-        } catch (RegraException e) {
-            r.addFlashAttribute("erro", e.getMessage());
-        }
-        return "redirect:/vacinas";
+        return feedback.executar(() -> service.excluir(id), "sucesso.vacina.excluida", LISTA, r);
+    }
+
+    private String formulario(VacinaForm form, Long id, Model m) {
+        m.addAttribute("form", form);
+        m.addAttribute("id", id);
+        m.addAttribute("animais", animais.listar());
+        return FORM;
     }
 }

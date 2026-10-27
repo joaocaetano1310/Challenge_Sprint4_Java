@@ -1,23 +1,35 @@
 package com.futurevet.web;
 
-import com.futurevet.service.*;
+import com.futurevet.service.AgendaService;
+import com.futurevet.service.AnimalService;
+import com.futurevet.service.RegraException;
 import com.futurevet.web.forms.AgendaForm;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/consultas")
 public class AgendaController {
+    private static final String FORM = "consulta-form";
+    private static final String LISTA = "/consultas";
+
     private final AgendaService service;
     private final AnimalService animais;
+    private final Feedback feedback;
 
-    public AgendaController(AgendaService service, AnimalService animais) {
+    public AgendaController(AgendaService service, AnimalService animais, Feedback feedback) {
         this.service = service;
         this.animais = animais;
+        this.feedback = feedback;
     }
 
     @GetMapping
@@ -28,25 +40,12 @@ public class AgendaController {
 
     @GetMapping("/nova")
     public String nova(Model m) {
-        m.addAttribute("form", new AgendaForm());
-        m.addAttribute("animais", animais.listar());
-        return "consulta-form";
+        return formulario(new AgendaForm(), null, m);
     }
 
     @GetMapping("/{id}/reagendar")
     public String editar(@PathVariable long id, Model m) {
-        var c = service.buscar(id);
-        AgendaForm f = new AgendaForm();
-        f.setAnimalId(c.animalId());
-        f.setTipo(c.tipo());
-        f.setData(c.data());
-        f.setHora(c.hora() == null ? null : java.time.LocalTime.parse(c.hora()));
-        f.setLocal(c.local());
-        f.setObservacao(c.observacao());
-        m.addAttribute("form", f);
-        m.addAttribute("id", id);
-        m.addAttribute("animais", animais.listar());
-        return "consulta-form";
+        return formulario(AgendaForm.de(service.buscar(id)), id, m);
     }
 
     @PostMapping("/salvar")
@@ -54,46 +53,43 @@ public class AgendaController {
             BindingResult b, Model m, RedirectAttributes r) {
         if (id != null)
             service.buscar(id);
-        m.addAttribute("id", id);
-        m.addAttribute("animais", animais.listar());
+        formulario(f, id, m);
         if (b.hasErrors())
-            return "consulta-form";
+            return FORM;
         try {
             if (id == null)
                 service.agendar(f);
             else
                 service.reagendar(id, f);
         } catch (RegraException e) {
-            b.reject("regra", e.getMessage());
-            return "consulta-form";
+            b.reject(e.getCodigo(), e.getArgumentos(), e.getCodigo());
+            return FORM;
         }
-        r.addFlashAttribute("sucesso", id == null ? "Solicitação enviada. Aguarde a confirmação da clínica."
-                : "Consulta reagendada. Aguarde nova confirmação.");
-        return "redirect:/consultas";
+        feedback.sucesso(r, id == null ? "sucesso.consulta.solicitada" : "sucesso.consulta.reagendada");
+        return "redirect:" + LISTA;
     }
 
     @PostMapping("/{id}/confirmar")
     public String confirmar(@PathVariable long id, RedirectAttributes r) {
-        return executar(() -> service.confirmar(id), "Consulta confirmada.", r);
+        return feedback.executar(() -> service.confirmar(id), "sucesso.consulta.confirmada", LISTA, r);
     }
 
     @PostMapping("/{id}/cancelar")
     public String cancelar(@PathVariable long id, @RequestParam String motivo, RedirectAttributes r) {
-        return executar(() -> service.cancelar(id, motivo), "Consulta cancelada. Horário liberado.", r);
+        return feedback.executar(() -> service.cancelar(id, motivo), "sucesso.consulta.cancelada", LISTA, r);
     }
 
     @PostMapping("/{id}/concluir")
     public String concluir(@PathVariable long id, @RequestParam String observacao, RedirectAttributes r) {
-        return executar(() -> service.concluir(id, observacao), "Atendimento concluído e registrado.", r);
+        return feedback.executar(() -> service.concluir(id, observacao), "sucesso.consulta.concluida", LISTA, r);
     }
 
-    private String executar(Runnable operacao, String mensagem, RedirectAttributes r) {
-        try {
-            operacao.run();
-            r.addFlashAttribute("sucesso", mensagem);
-        } catch (RegraException e) {
-            r.addFlashAttribute("erro", e.getMessage());
-        }
-        return "redirect:/consultas";
+    private String formulario(AgendaForm form, Long id, Model m) {
+        m.addAttribute("form", form);
+        m.addAttribute("id", id);
+        m.addAttribute("animais", animais.listar());
+        if (id != null)
+            m.addAttribute("animalAtual", service.buscar(id).animal());
+        return FORM;
     }
 }

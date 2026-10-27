@@ -42,7 +42,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     }
                 }
-            } catch (Exception ignorado) {
+            } catch (RuntimeException tokenInvalido) {
+                // Token expirado ou adulterado: a requisição segue sem autenticação e recebe 401.
+                SecurityContextHolder.clearContext();
             }
         }
         chain.doFilter(req, res);

@@ -2,7 +2,6 @@ package com.futurevet.web.api;
 
 import com.futurevet.repository.UsuarioRepository;
 import com.futurevet.security.JwtService;
-import com.futurevet.service.RegraException;
 import com.futurevet.service.UsuarioService;
 import com.futurevet.web.api.dto.LoginRequest;
 import com.futurevet.web.api.dto.TokenResponse;
@@ -13,7 +12,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,18 +39,18 @@ public class AuthApiController {
             authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(body.email().strip(), body.senha()));
         } catch (AuthenticationException e) {
-            throw new BadCredentialsException("E-mail ou senha inválidos.");
+            throw new BadCredentialsException("credenciais");
         }
         var u = usuarios.email(body.email().strip())
-                .orElseThrow(() -> new BadCredentialsException("E-mail ou senha inválidos."));
+                .orElseThrow(() -> new BadCredentialsException("credenciais"));
         return new TokenResponse(jwt.gerar(u.email(), u.role()), u.id(), u.nome(), u.email(), u.role());
     }
 
     @PostMapping("/registro")
     public ResponseEntity<TokenResponse> registrar(@Valid @RequestBody RegistroForm form) {
         usuarioService.registrar(form);
-        var u = usuarios.email(form.getEmail().strip().toLowerCase())
-                .orElseThrow(() -> new RegraException("Falha ao localizar usuário recém-criado."));
+        var u = usuarios.email(UsuarioService.normalizarEmail(form.getEmail()))
+                .orElseThrow(() -> new IllegalStateException("Usuário recém-criado não encontrado."));
         return ResponseEntity.status(201)
                 .body(new TokenResponse(jwt.gerar(u.email(), u.role()), u.id(), u.nome(), u.email(), u.role()));
     }

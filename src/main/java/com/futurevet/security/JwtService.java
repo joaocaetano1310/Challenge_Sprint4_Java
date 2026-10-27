@@ -1,6 +1,7 @@
 package com.futurevet.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import java.util.function.Function;
 
 @Component
 public class JwtService {
+    private static final long MILISSEGUNDOS_POR_MINUTO = 60_000L;
 
     private final SecretKey key;
     private final long expirationMinutes;
@@ -25,7 +27,7 @@ public class JwtService {
 
     public String gerar(String email, String role) {
         Date agora = new Date();
-        Date expira = new Date(agora.getTime() + expirationMinutes * 60_000);
+        Date expira = new Date(agora.getTime() + expirationMinutes * MILISSEGUNDOS_POR_MINUTO);
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
@@ -42,7 +44,7 @@ public class JwtService {
     public boolean valido(String token, String emailEsperado) {
         try {
             return email(token).equalsIgnoreCase(emailEsperado) && !expirado(token);
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }

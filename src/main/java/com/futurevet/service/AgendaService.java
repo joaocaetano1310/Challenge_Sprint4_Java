@@ -1,25 +1,42 @@
 package com.futurevet.service;
 
+import com.futurevet.model.Animal;
 import com.futurevet.model.Consulta;
+import com.futurevet.model.StatusConsulta;
+import com.futurevet.model.TipoEvento;
 import com.futurevet.repository.ConsultaRepository;
 import com.futurevet.security.Acesso;
 import com.futurevet.web.forms.AgendaForm;
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.*;
-import java.util.List;
 
+/**
+ * Fluxo de agendamento: o tutor solicita, a clínica confirma e conclui. Toda alteração bloqueia a
+ * agenda (SELECT ... FOR UPDATE) para que dois pedidos simultâneos não ocupem o mesmo horário.
+ */
 @Service
 public class AgendaService {
+    private static final LocalTime ABERTURA = LocalTime.of(8, 0);
+    private static final LocalTime FECHAMENTO = LocalTime.of(18, 0);
+    private static final int LIMITE_TEXTO = 255;
+
     private final ConsultaRepository repo;
     private final AnimalService animais;
     private final Acesso acesso;
+    private final PublicadorEventos eventos;
     private final Clock clock;
 
-    public AgendaService(ConsultaRepository repo, AnimalService animais, Acesso acesso, Clock clock) {
+    public AgendaService(ConsultaRepository repo, AnimalService animais, Acesso acesso, PublicadorEventos eventos,
+            Clock clock) {
         this.repo = repo;
         this.animais = animais;
         this.acesso = acesso;
+        this.eventos = eventos;
         this.clock = clock;
     }
 
@@ -28,31 +45,18 @@ public class AgendaService {
     }
 
     public Consulta buscar(long id) {
-        var c = repo.buscar(id).orElseThrow(() -> new RegraException("Consulta não encontrada."));
+        var c = repo.buscar(id).orElseThrow(() -> new RegraException("erro.consulta.nao-encontrada"));
         acesso.dono(c.usuarioId());
         return c;
-    }
-
-    private void validar(AgendaForm f, long ignorar) {
-        animais.buscar(f.getAnimalId());
-        if (f.getHora().getSecond() != 0 || f.getHora().getNano() != 0)
-            throw new RegraException("Informe o horário em horas e minutos.");
-        if (!LocalDateTime.of(f.getData(), f.getHora()).isAfter(LocalDateTime.now(clock)))
-            throw new RegraException("Escolha uma data e hora futuras.");
-        if (f.getData().getDayOfWeek() == DayOfWeek.SUNDAY || f.getHora().isBefore(LocalTime.of(8, 0))
-                || f.getHora().isAfter(LocalTime.of(18, 0)))
-            throw new RegraException("Agendamentos de segunda a sábado, das 08:00 às 18:00.");
-        if (repo.conflito(f.getAnimalId(), f.getData(), f.getHora().toString(), f.getLocal().strip(),
-                ignorar))
-            throw new RegraException("Este horário já está ocupado para o animal ou local escolhido.");
     }
 
     @Transactional
     public long agendar(AgendaForm f) {
         repo.bloquearAgenda();
-        validar(f, -1);
-        f.setLocal(f.getLocal().strip());
-        return repo.criar(f);
+        Animal animal = validar(f, -1);
+        long id = repo.criar(f);
+        publicar(TipoEvento.CONSULTA_SOLICITADA, animal.usuarioId(), animal.nome(), f);
+        return id;
     }
 
     @Transactional
@@ -60,11 +64,11 @@ public class AgendaService {
         repo.bloquearAgenda();
         var c = buscar(id);
         if (!c.ativa())
-            throw new RegraException("Consulta encerrada não pode ser reagendada.");
+            throw new RegraException("erro.consulta.encerrada-reagendar");
         f.setAnimalId(c.animalId());
         validar(f, id);
-        f.setLocal(f.getLocal().strip());
         repo.reagendar(id, f);
+        publicar(TipoEvento.CONSULTA_REAGENDADA, c.usuarioId(), c.animal(), f);
     }
 
     @Transactional
@@ -72,11 +76,12 @@ public class AgendaService {
         acesso.admin();
         repo.bloquearAgenda();
         var c = buscar(id);
-        if (!c.status().equals("AGENDADA"))
-            throw new RegraException("Somente consultas agendadas podem ser confirmadas.");
+        if (!c.aguardandoConfirmacao())
+            throw new RegraException("erro.consulta.confirmar-somente-agendada");
         if (passada(c))
-            throw new RegraException("Não é possível confirmar consulta no passado. Reagende primeiro.");
-        repo.status(id, "CONFIRMADA", c.observacao());
+            throw new RegraException("erro.consulta.confirmar-passada");
+        repo.status(id, StatusConsulta.CONFIRMADA, c.observacao());
+        publicar(TipoEvento.CONSULTA_CONFIRMADA, c);
     }
 
     @Transactional
@@ -84,10 +89,9 @@ public class AgendaService {
         repo.bloquearAgenda();
         var c = buscar(id);
         if (!c.ativa())
-            throw new RegraException("A consulta já foi encerrada.");
-        if (motivo == null || motivo.isBlank() || motivo.length() > 255)
-            throw new RegraException("Informe o motivo do cancelamento (até 255 caracteres).");
-        repo.status(id, "CANCELADA", motivo.strip());
+            throw new RegraException("erro.consulta.encerrada");
+        repo.status(id, StatusConsulta.CANCELADA, textoObrigatorio(motivo, "erro.consulta.motivo"));
+        publicar(TipoEvento.CONSULTA_CANCELADA, c);
     }
 
     @Transactional
@@ -95,17 +99,45 @@ public class AgendaService {
         acesso.admin();
         repo.bloquearAgenda();
         var c = buscar(id);
-        if (!c.status().equals("CONFIRMADA"))
-            throw new RegraException("Confirme a consulta antes de concluir.");
+        if (!c.confirmada())
+            throw new RegraException("erro.consulta.concluir-sem-confirmar");
         if (c.hora() == null || !passada(c))
-            throw new RegraException("Só é possível concluir após o horário da consulta.");
-        if (observacao == null || observacao.isBlank() || observacao.length() > 255)
-            throw new RegraException("Informe um resumo do atendimento (até 255 caracteres).");
-        repo.status(id, "REALIZADA", observacao.strip());
+            throw new RegraException("erro.consulta.concluir-antes-horario");
+        repo.status(id, StatusConsulta.REALIZADA, textoObrigatorio(observacao, "erro.consulta.resumo"));
+        publicar(TipoEvento.CONSULTA_REALIZADA, c);
+    }
+
+    private Animal validar(AgendaForm f, long ignorar) {
+        Animal animal = animais.buscar(f.getAnimalId());
+        f.setLocal(f.getLocal().strip());
+        LocalTime hora = f.getHora();
+        if (hora.getSecond() != 0 || hora.getNano() != 0)
+            throw new RegraException("erro.consulta.horario-minutos");
+        if (!LocalDateTime.of(f.getData(), hora).isAfter(LocalDateTime.now(clock)))
+            throw new RegraException("erro.consulta.data-futura");
+        if (f.getData().getDayOfWeek() == DayOfWeek.SUNDAY || hora.isBefore(ABERTURA) || hora.isAfter(FECHAMENTO))
+            throw new RegraException("erro.consulta.horario-funcionamento");
+        if (repo.conflito(f.getAnimalId(), f.getData(), hora.toString(), f.getLocal(), ignorar))
+            throw new RegraException("erro.consulta.conflito");
+        return animal;
+    }
+
+    private static String textoObrigatorio(String texto, String codigoErro) {
+        if (texto == null || texto.isBlank() || texto.length() > LIMITE_TEXTO)
+            throw new RegraException(codigoErro, LIMITE_TEXTO);
+        return texto.strip();
     }
 
     private boolean passada(Consulta c) {
         return c.hora() != null
                 && LocalDateTime.of(c.data(), LocalTime.parse(c.hora())).isBefore(LocalDateTime.now(clock));
+    }
+
+    private void publicar(TipoEvento tipo, long tutor, String animal, AgendaForm f) {
+        eventos.publicar(tipo, tutor, animal, f.getHora().toString(), f.getData());
+    }
+
+    private void publicar(TipoEvento tipo, Consulta c) {
+        eventos.publicar(tipo, c.usuarioId(), c.animal(), c.hora(), c.data());
     }
 }

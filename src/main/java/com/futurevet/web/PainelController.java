@@ -1,15 +1,24 @@
 package com.futurevet.web;
 
-import com.futurevet.service.*;
+import com.futurevet.model.Consulta;
 import com.futurevet.repository.UsuarioRepository;
 import com.futurevet.security.Acesso;
+import com.futurevet.service.AgendaService;
+import com.futurevet.service.AnimalService;
+import com.futurevet.service.CarteiraService;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.util.Comparator;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.ui.Model;
-import java.time.*;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class PainelController {
+    private static final int CONSULTAS_NO_PAINEL = 5;
+    private static final int ANIMAIS_NO_PAINEL = 4;
+    private static final String SEM_HORARIO = "99:99";
+
     private final AnimalService animais;
     private final AgendaService agenda;
     private final CarteiraService carteira;
@@ -29,19 +38,19 @@ public class PainelController {
 
     @GetMapping("/")
     public String painel(Model m) {
+        LocalDate hoje = LocalDate.now(clock);
         var pets = animais.listar();
-        var doses = carteira.listar();
         var consultas = agenda.listar().stream()
-                .filter(c -> c.ativa() && !c.data().isBefore(LocalDate.now(clock)))
-                .sorted(java.util.Comparator.comparing(com.futurevet.model.Consulta::data)
-                        .thenComparing(c -> c.hora() == null ? "99:99" : c.hora()))
+                .filter(c -> c.ativa() && !c.data().isBefore(hoje))
+                .sorted(Comparator.comparing(Consulta::data)
+                        .thenComparing(c -> c.hora() == null ? SEM_HORARIO : c.hora()))
                 .toList();
         m.addAttribute("totalAnimais", pets.size());
-        m.addAttribute("pendencias", doses.stream()
-                .filter(i -> java.util.Set.of("ATRASADA", "PROXIMA").contains(i.situacao())).count());
+        m.addAttribute("pendencias", carteira.listar().stream().filter(i -> i.situacao().precisaAtencao()).count());
         m.addAttribute("totalConsultas", consultas.size());
-        m.addAttribute("consultas", consultas.stream().limit(5).toList());
-        m.addAttribute("animais", pets.stream().limit(4).toList());
+        m.addAttribute("aguardandoConfirmacao", consultas.stream().filter(Consulta::aguardandoConfirmacao).count());
+        m.addAttribute("consultas", consultas.stream().limit(CONSULTAS_NO_PAINEL).toList());
+        m.addAttribute("animais", pets.stream().limit(ANIMAIS_NO_PAINEL).toList());
         return "painel";
     }
 

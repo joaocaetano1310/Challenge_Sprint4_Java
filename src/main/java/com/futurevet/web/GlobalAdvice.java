@@ -1,62 +1,91 @@
 package com.futurevet.web;
 
+import com.futurevet.internacionalizacao.Mensagens;
 import com.futurevet.security.Acesso;
+import com.futurevet.service.NotificacaoService;
 import com.futurevet.service.RegraException;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.WebDataBinder;
+import jakarta.servlet.http.HttpServletRequest;
+import java.beans.PropertyEditorSupport;
+import java.security.Principal;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
-import org.springframework.ui.Model;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ControllerAdvice
 public class GlobalAdvice {
-    private final Acesso acesso;
+    private static final String TELA_ERRO = "erro";
+    private static final String[] CAMPOS_SEM_TRIM = { "senha", "confirmacao" };
+    private static final String[] CAMPOS_PROIBIDOS = { "role", "senhaHash", "usuarioId" };
 
-    public GlobalAdvice(Acesso acesso) {
+    private final Acesso acesso;
+    private final NotificacaoService notificacoes;
+    private final Mensagens mensagens;
+
+    public GlobalAdvice(Acesso acesso, NotificacaoService notificacoes, Mensagens mensagens) {
         this.acesso = acesso;
+        this.notificacoes = notificacoes;
+        this.mensagens = mensagens;
     }
 
     @InitBinder
     public void binder(WebDataBinder b) {
         b.registerCustomEditor(String.class, new StringTrimmerEditor(true));
-        for (String campo : new String[] { "senha", "confirmacao" }) {
-            b.registerCustomEditor(String.class, campo, new java.beans.PropertyEditorSupport() {
+        for (String campo : CAMPOS_SEM_TRIM) {
+            b.registerCustomEditor(String.class, campo, new PropertyEditorSupport() {
                 @Override
                 public void setAsText(String text) {
                     setValue(text);
                 }
             });
         }
-        b.setDisallowedFields("role", "senhaHash", "usuarioId");
+        b.setDisallowedFields(CAMPOS_PROIBIDOS);
     }
 
+    /**
+     * Usuário logado, contador de avisos e endereço para a troca de idioma — usados pelo layout. Também é
+     * chamado pelos tratadores de exceção, que recebem um Model novo.
+     */
     @ModelAttribute
-    public void usuario(Model m, java.security.Principal p) {
-        if (p != null)
+    public void layout(Model m, Principal p, HttpServletRequest request) {
+        if (request.getRequestURI().startsWith("/api/"))
+            return;
+        m.addAttribute("paginaAtual", request.getRequestURI());
+        m.addAttribute("uriIdioma", "GET".equals(request.getMethod()) ? request.getRequestURI() : "/");
+        if (p != null) {
             m.addAttribute("usuario", acesso.atual());
+            m.addAttribute("notificacoesNaoLidas", notificacoes.naoLidas());
+        }
     }
 
     @ExceptionHandler(RegraException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String regra(RegraException e, Model m) {
-        m.addAttribute("mensagem", e.getMessage());
-        return "erro";
+    public String regra(RegraException e, Model m, Principal p, HttpServletRequest request) {
+        layout(m, p, request);
+        m.addAttribute("mensagem", mensagens.texto(e));
+        return TELA_ERRO;
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public String negado(Model m) {
-        m.addAttribute("mensagem", "Você não tem permissão para acessar este registro.");
-        return "erro";
+    public String negado(Model m, Principal p, HttpServletRequest request) {
+        layout(m, p, request);
+        m.addAttribute("mensagem", mensagens.texto("erro.acesso.registro"));
+        return TELA_ERRO;
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public String conflito(Model m) {
-        m.addAttribute("mensagem",
-                "Não foi possível salvar: há um registro duplicado ou dados vinculados. Confira as informações e tente novamente.");
-        return "erro";
+    public String conflito(Model m, Principal p, HttpServletRequest request) {
+        layout(m, p, request);
+        m.addAttribute("mensagem", mensagens.texto("erro.integridade"));
+        return TELA_ERRO;
     }
 }

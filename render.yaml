@@ -1,10 +1,15 @@
+# Deploy no Render (plano gratuito): aplicação web + microsservício de IA.
+# Na nuvem a aplicação chama a IA pela URL pública (IA_URL) e, se RABBITMQ_URL for informado
+# (ex.: instância gratuita do CloudAMQP), publica os eventos no RabbitMQ.
+# Eureka e RabbitMQ completos rodam juntos no docker-compose.yml.
 services:
   - type: web
-    name: Challenge_Sprint3_Java
+    name: Challenge_Sprint4_Java
     runtime: docker
     branch: main
     region: oregon
     plan: free
+    healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: oracle
@@ -20,3 +25,28 @@ services:
         value: "false"
       - key: HTTPS_ENABLED
         value: "true"
+      - key: JWT_SECRET
+        sync: false
+      - key: IA_URL
+        value: https://futurevet-ia.onrender.com
+      - key: RABBITMQ_ENABLED
+        value: "false"
+      - key: RABBITMQ_URL
+        sync: false
+
+  - type: web
+    name: futurevet-ia
+    runtime: docker
+    branch: main
+    region: oregon
+    plan: free
+    dockerfilePath: ./microsservicos/futurevet-ia/Dockerfile
+    dockerContext: ./microsservicos/futurevet-ia
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: IA_API_KEY
+        sync: false
+      - key: IA_BASE_URL
+        value: https://api.groq.com/openai
+      - key: IA_MODELO
+        value: llama-3.3-70b-versatile

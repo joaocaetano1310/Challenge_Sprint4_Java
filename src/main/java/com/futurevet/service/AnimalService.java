@@ -4,9 +4,9 @@ import com.futurevet.model.Animal;
 import com.futurevet.repository.AnimalRepository;
 import com.futurevet.security.Acesso;
 import com.futurevet.web.forms.AnimalForm;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 public class AnimalService {
@@ -23,7 +23,7 @@ public class AnimalService {
     }
 
     public Animal buscar(long id) {
-        var a = repo.buscar(id).orElseThrow(() -> new RegraException("Animal não encontrado."));
+        var a = repo.buscar(id).orElseThrow(() -> new RegraException("erro.animal.nao-encontrado"));
         acesso.dono(a.usuarioId());
         return a;
     }
@@ -37,12 +37,12 @@ public class AnimalService {
         return id;
     }
 
+    /** O histórico clínico é preservado: animais com consultas ou vacinas não podem ser excluídos. */
     @Transactional
     public void excluir(long id) {
         buscar(id);
         if (repo.temHistorico(id))
-            throw new RegraException(
-                    "Este animal possui histórico de consultas ou vacinas. Preserve o histórico; a exclusão foi bloqueada.");
+            throw new RegraException("erro.animal.historico");
         repo.excluir(id);
     }
 }

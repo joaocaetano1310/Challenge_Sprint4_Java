@@ -1,10 +1,13 @@
 package com.futurevet.repository;
 
-import com.futurevet.model.*;
+import com.futurevet.model.Usuario;
+import com.futurevet.model.Vacina;
 import com.futurevet.web.forms.VacinaForm;
-import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class VacinaRepository {

@@ -1,13 +1,19 @@
 package com.futurevet.service;
 
+import com.futurevet.model.Perfil;
 import com.futurevet.repository.UsuarioRepository;
 import com.futurevet.web.forms.RegistroForm;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UsuarioService {
+    /** O BCrypt considera apenas os primeiros 72 bytes da senha. */
+    private static final int LIMITE_BYTES_BCRYPT = 72;
+
     private final UsuarioRepository repo;
     private final PasswordEncoder encoder;
 
@@ -16,22 +22,31 @@ public class UsuarioService {
         this.encoder = encoder;
     }
 
+    /** Todo cadastro público cria um TUTOR; o perfil ADMIN é atribuído apenas pela clínica. */
     @Transactional
     public long registrar(RegistroForm f) {
         if (!f.getSenha().equals(f.getConfirmacao()))
-            throw new RegraException("As senhas não conferem.");
-        if (f.getSenha().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72)
-            throw new RegraException("A senha deve ter até 72 bytes em UTF-8.");
-        String cpf = f.getCpf().replaceAll("[^0-9]", "");
-        String tel = f.getTelefone() == null ? "" : f.getTelefone().replaceAll("[^0-9]", "");
+            throw new RegraException("erro.usuario.senhas");
+        if (f.getSenha().getBytes(StandardCharsets.UTF_8).length > LIMITE_BYTES_BCRYPT)
+            throw new RegraException("erro.usuario.senha-bytes", LIMITE_BYTES_BCRYPT);
+        String cpf = somenteDigitos(f.getCpf());
+        String telefone = somenteDigitos(f.getTelefone());
         if (cpf.length() != 11)
-            throw new RegraException("Informe os 11 dígitos do CPF.");
-        if (!tel.isEmpty() && tel.length() != 10 && tel.length() != 11)
-            throw new RegraException("Telefone deve ter 10 ou 11 dígitos com DDD.");
-        String email = f.getEmail().strip().toLowerCase(java.util.Locale.ROOT);
+            throw new RegraException("erro.usuario.cpf");
+        if (!telefone.isEmpty() && telefone.length() != 10 && telefone.length() != 11)
+            throw new RegraException("erro.usuario.telefone");
+        String email = normalizarEmail(f.getEmail());
         if (repo.duplicado(email, Long.parseLong(cpf)))
-            throw new RegraException("E-mail ou CPF já cadastrado.");
+            throw new RegraException("erro.usuario.duplicado");
         return repo.criar(f.getNome().strip(), email, encoder.encode(f.getSenha()), Long.parseLong(cpf),
-                tel.isEmpty() ? null : Long.valueOf(tel), "TUTOR");
+                telefone.isEmpty() ? null : Long.valueOf(telefone), Perfil.TUTOR);
+    }
+
+    public static String normalizarEmail(String email) {
+        return email.strip().toLowerCase(Locale.ROOT);
+    }
+
+    private static String somenteDigitos(String valor) {
+        return valor == null ? "" : valor.replaceAll("\\D", "");
     }
 }

@@ -1,6 +1,10 @@
 package com.futurevet.web.forms;
 
-import jakarta.validation.constraints.*;
+import com.futurevet.model.Vacina;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 
 public class VacinaForm {
@@ -29,24 +33,24 @@ public class VacinaForm {
 
     @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private java.time.LocalDate data;
+    private LocalDate data;
 
-    public java.time.LocalDate getData() {
+    public LocalDate getData() {
         return data;
     }
 
-    public void setData(java.time.LocalDate value) {
+    public void setData(LocalDate value) {
         this.data = value;
     }
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private java.time.LocalDate proximaDose;
+    private LocalDate proximaDose;
 
-    public java.time.LocalDate getProximaDose() {
+    public LocalDate getProximaDose() {
         return proximaDose;
     }
 
-    public void setProximaDose(java.time.LocalDate value) {
+    public void setProximaDose(LocalDate value) {
         this.proximaDose = value;
     }
 
@@ -59,5 +63,15 @@ public class VacinaForm {
 
     public void setLocal(String value) {
         this.local = value;
+    }
+
+    public static VacinaForm de(Vacina v) {
+        VacinaForm f = new VacinaForm();
+        f.setAnimalId(v.animalId());
+        f.setNome(v.nome());
+        f.setData(v.data());
+        f.setProximaDose(v.proximaDose());
+        f.setLocal(v.local());
+        return f;
     }
 }

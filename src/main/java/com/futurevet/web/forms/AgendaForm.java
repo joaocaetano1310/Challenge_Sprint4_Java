@@ -1,6 +1,11 @@
 package com.futurevet.web.forms;
 
-import jakarta.validation.constraints.*;
+import com.futurevet.model.Consulta;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import org.springframework.format.annotation.DateTimeFormat;
 
 public class AgendaForm {
@@ -29,25 +34,25 @@ public class AgendaForm {
 
     @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private java.time.LocalDate data;
+    private LocalDate data;
 
-    public java.time.LocalDate getData() {
+    public LocalDate getData() {
         return data;
     }
 
-    public void setData(java.time.LocalDate value) {
+    public void setData(LocalDate value) {
         this.data = value;
     }
 
     @NotNull
     @DateTimeFormat(pattern = "HH:mm")
-    private java.time.LocalTime hora;
+    private LocalTime hora;
 
-    public java.time.LocalTime getHora() {
+    public LocalTime getHora() {
         return hora;
     }
 
-    public void setHora(java.time.LocalTime value) {
+    public void setHora(LocalTime value) {
         this.hora = value;
     }
 
@@ -72,5 +77,16 @@ public class AgendaForm {
 
     public void setObservacao(String value) {
         this.observacao = value;
+    }
+
+    public static AgendaForm de(Consulta c) {
+        AgendaForm f = new AgendaForm();
+        f.setAnimalId(c.animalId());
+        f.setTipo(c.tipo());
+        f.setData(c.data());
+        f.setHora(c.hora() == null ? null : LocalTime.parse(c.hora()));
+        f.setLocal(c.local());
+        f.setObservacao(c.observacao());
+        return f;
     }
 }

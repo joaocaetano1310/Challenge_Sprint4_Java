@@ -1,9 +1,12 @@
 package com.futurevet.repository;
 
+import com.futurevet.model.Perfil;
 import com.futurevet.model.Usuario;
-import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class UsuarioRepository {
@@ -29,11 +32,11 @@ public class UsuarioRepository {
                 Integer.class, email, cpf) > 0;
     }
 
-    public long criar(String nome, String email, String senha, long cpf, Long telefone, String role) {
+    public long criar(String nome, String email, String senha, long cpf, Long telefone, Perfil perfil) {
         long id = ids.next("USUARIO");
         db.update(
                 "INSERT INTO TB_USUARIO(ID_USUARIO,NOME,EMAIL,SENHA,CPF,TELEFONE,ROLE) VALUES(?,?,?,?,?,?,?)",
-                id, nome, email, senha, cpf, telefone, role);
+                id, nome, email, senha, cpf, telefone, perfil.name());
         return id;
     }
 
@@ -42,6 +45,10 @@ public class UsuarioRepository {
     }
 
     public long admins() {
-        return db.queryForObject("SELECT COUNT(*) FROM TB_USUARIO WHERE ROLE='ADMIN'", Long.class);
+        return db.queryForObject("SELECT COUNT(*) FROM TB_USUARIO WHERE ROLE=?", Long.class, Perfil.ADMIN.name());
+    }
+
+    public void promover(long id, Perfil perfil) {
+        db.update("UPDATE TB_USUARIO SET ROLE=? WHERE ID_USUARIO=?", perfil.name(), id);
     }
 }

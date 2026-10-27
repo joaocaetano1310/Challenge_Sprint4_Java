@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout :: head('Algo aconteceu')}">
-</head>
-<body class="register">
-<main class="register-card">
-<a class="brand" href="/">✚ FutureVet.</a>
-<h1>Não foi possível abrir esta página.</h1>
-<p th:text="${status == 404 ? 'O endereço não foi encontrado.' : 'Tente novamente. Se o problema continuar, procure a equipe responsável.'}">
-</p>
-<a class="button" href="/">Voltar ao início</a>
-</main>
-</body>
+<html th:lang="${#locale.toLanguageTag()}" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{layout :: head(#{erro.pagina.titulo})}"></head>
+  <body class="register">
+    <main class="register-card">
+      <a class="brand" th:href="@{/}">✚ FutureVet.</a>
+      <h1 th:text="#{erro.pagina.manchete}">Não foi possível abrir esta página.</h1>
+      <p th:text="${status == 404} ? #{erro.pagina.404} : #{erro.pagina.outro}">Tente novamente.</p>
+      <a class="button" th:href="@{/}" th:text="#{erro.voltar}">Voltar ao início</a>
+    </main>
+  </body>
 </html>
