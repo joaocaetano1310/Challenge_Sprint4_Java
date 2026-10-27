@@ -1,39 +1,34 @@
 # 🐾 FutureVet — Plataforma de Gestão Veterinária
 
-> Aplicação web desenvolvida com **Spring Boot** como parte do Challenge FIAP 2026 (2º Semestre) em parceria com a **Clyvo Vet**, com foco em saúde contínua e bem-estar animal.
+> Challenge FIAP 2026 · 2º semestre · parceria **Clyvo Vet**
+> **Java Advanced — Entrega Final (4ª Sprint)**
+
+O FutureVet aproxima tutores e clínica no cuidado contínuo dos pets. Em um só lugar, o tutor agenda consultas, acompanha a carteira de vacinação e recebe avisos da clínica. A clínica confirma a agenda, registra os atendimentos e acompanha a saúde da própria plataforma.
 
 ---
 
-## 📋 Sobre o Projeto
+## 🔗 Links da entrega
 
-O **FutureVet** é uma plataforma web que permite a clínicas veterinárias e tutores gerenciarem de forma centralizada o histórico de saúde dos pets, agendamento de consultas e controle de vacinas. O sistema conta com autenticação segura e controle de acesso baseado em perfis de usuário (ADMIN e TUTOR).
+| Artefato | Link |
+|---|---|
+| 💻 Repositório GitHub | https://github.com/joaocaetano1310/Challenge_Sprint4_Java |
+| 🌐 Aplicação online (deploy) | https://challenge-sprint3-java.onrender.com |
+| 🤖 Microsserviço de IA (deploy) | https://futurevet-ia.onrender.com/actuator/health |
+| 🎬 Vídeo da apresentação (até 15 min) | _adicionar o link do YouTube aqui_ |
+| 📱 App mobile (consome a API) | https://github.com/Felipe-Furlanetto0504/Challenge-FutureVet-Mobile |
+| 📡 IoT (coleira PetLink) | https://github.com/Buenozw/CHALLENGE---IOT |
 
-### Funcionalidades principais
+> ⚠️ No plano gratuito do Render, o primeiro acesso depois de um tempo parado pode levar até 60 segundos.
 
-- ✅ Cadastro e gerenciamento de tutores e pets
-- ✅ Agendamento de consultas, com confirmação, cancelamento e conclusão pela clínica
-- ✅ Carteira de vacinação com controle de doses, reforços e histórico
-- ✅ Autenticação com Spring Security (dois perfis: ADMIN e TUTOR)
-- ✅ API REST com autenticação JWT, documentada com Swagger
-- ✅ Controle de versão do banco de dados com Flyway
-- ✅ Interface web responsiva com Thymeleaf
-- ✅ **Sprint 4:** notificações por mensageria (RabbitMQ), assistente virtual com IA (Spring AI + OpenFeign + Eureka), internacionalização (pt-BR/en) e monitoramento com Actuator
+### Acesso de demonstração (perfil `demo`, local ou docker-compose)
 
----
+| Perfil | E-mail | Senha |
+|---|---|---|
+| **ADMIN** (clínica) | clinica@futurevet.local | Futurevet123! |
+| **TUTOR** | tutor@futurevet.local | Futurevet123! |
+| **TUTOR** (outro tutor, para testar o isolamento) | outro@futurevet.local | Futurevet123! |
 
-## 🎬 Vídeo Demonstrativo
-
-[![Assistir no YouTube](https://img.shields.io/badge/YouTube-Assistir%20Demo-red?style=for-the-badge&logo=youtube)](https://youtu.be/jWtMZDGaDf8)
-
-> Demonstração completa das funcionalidades da aplicação web (máx. 10 min.)
-
----
-
-## 🚀 Deploy
-
-[![Acessar Aplicação](https://img.shields.io/badge/Render-Aplicação%20Online-46E3B7?style=for-the-badge&logo=render)](https://challenge-sprint3-java.onrender.com)
-
-> ⚠️ O plano gratuito do Render pode levar até **60 segundos** para iniciar após um período de inatividade.
+No perfil `oracle` (produção) não existem contas de demonstração. Crie a conta em `/registro` (veja [Banco de dados](#️-banco-de-dados)).
 
 ---
 
@@ -49,212 +44,9 @@ O **FutureVet** é uma plataforma web que permite a clínicas veterinárias e tu
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 💡 Narrativa da solução
 
-| Tecnologia | Versão | Uso |
-|------------|--------|-----|
-| Java | 17 | Linguagem principal |
-| Spring Boot | 3.2.5 | Framework web |
-| Spring Security | 6.x | Autenticação e autorização |
-| Spring JDBC (JdbcTemplate) | 6.x | Persistência de dados |
-| JJWT | 0.12.6 | Geração e validação do token JWT da API |
-| Springdoc OpenAPI | 2.5.0 | Documentação da API (Swagger UI) |
-| Flyway | 9.x | Migrations do banco de dados |
-| Thymeleaf | 3.x | Template engine (frontend) |
-| Oracle Database | 19c | Banco de dados em produção |
-| H2 | 2.x | Banco de dados em desenvolvimento |
-| Maven | 3.8+ | Gerenciamento de dependências |
-| Spring AMQP (RabbitMQ) | 3.2 | **Sprint 4** — mensageria de eventos |
-| Spring Cloud OpenFeign e Eureka | 2025.0.3 | **Sprint 4** — comunicação entre microsserviços e descoberta de serviços |
-| Spring AI | 1.1.8 | **Sprint 4** — assistente com modelo de linguagem |
-| Spring Boot Actuator / Micrometer | — | **Sprint 4** — monitoramento |
-
-> Na Sprint 4 o projeto foi atualizado para **Spring Boot 3.5.16**, Flyway 11 e Springdoc 2.8.17.
-
----
-
-## ⚙️ Como Executar Localmente
-
-### Pré-requisitos
-
-- [Java 17+](https://adoptium.net/)
-- [Maven 3.8+](https://maven.apache.org/download.cgi)
-- Git
-
-### 1. Clone o repositório
-
-```bash
-git clone https://github.com/joaocaetano1310/Challenge_Sprint4_Java.git
-cd Challenge_Sprint4_Java
-```
-
-### 2. Execute com banco H2 (sem configuração adicional)
-
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=demo
-```
-
-### 3. Acesse no navegador
-
-```
-http://localhost:8080
-```
-
-### 4. Executar os testes
-
-```bash
-mvn test
-```
-
----
-
-## 🔐 Credenciais de Acesso
-
-Contas criadas automaticamente ao rodar no perfil `demo`:
-
-| Perfil | E-mail | Senha |
-|--------|--------|-------|
-| **ADMIN** (clínica) | clinica@futurevet.local | Futurevet123! |
-| **TUTOR** | tutor@futurevet.local | Futurevet123! |
-| **TUTOR** (segundo tutor) | outro@futurevet.local | Futurevet123! |
-
-> O perfil **ADMIN** representa a clínica e tem acesso completo ao sistema, incluindo o gerenciamento de usuários e a confirmação, o cancelamento e a conclusão das consultas. O perfil **TUTOR** acessa apenas os próprios pets, vacinas e consultas.
->
-> No perfil `oracle` (produção) esses dados de demonstração não são carregados: crie sua conta em `/registro`.
-
----
-
-## 🔌 API REST
-
-A aplicação também expõe uma API REST em `/api`, protegida por token JWT, utilizada pelo aplicativo mobile do projeto.
-
-- **Documentação (Swagger UI):** http://localhost:8080/swagger-ui/index.html
-- **Especificação OpenAPI:** http://localhost:8080/v3/api-docs
-
-### Autenticação
-
-```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"tutor@futurevet.local","senha":"Futurevet123!"}'
-```
-
-A resposta traz o token, que deve ser enviado nas demais requisições:
-
-```bash
-curl http://localhost:8080/api/animais \
-  -H "Authorization: Bearer SEU_TOKEN"
-```
-
-### Principais endpoints
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| POST | `/api/auth/login` | Autentica e devolve o token JWT |
-| POST | `/api/auth/registro` | Cadastra um novo tutor |
-| GET / POST / PUT / DELETE | `/api/animais` | CRUD de animais |
-| GET / POST / PUT / DELETE | `/api/vacinas` | Carteira de vacinação |
-| POST | `/api/vacinas/{id}/reforco` | Registra o reforço de uma dose |
-| GET / POST / PUT | `/api/consultas` | Agenda de consultas |
-| POST | `/api/consultas/{id}/confirmar` · `/cancelar` · `/concluir` | Ações da clínica |
-| GET | `/api/notificacoes` · `/api/notificacoes/nao-lidas` | **Sprint 4** — avisos do usuário |
-| POST | `/api/notificacoes/lidas` | **Sprint 4** — marca os avisos como lidos |
-| POST | `/api/assistente` | **Sprint 4** — pergunta ao Assistente Vet |
-| GET | `/actuator/health` · `/actuator/info` | **Sprint 4** — saúde da aplicação (público) |
-
----
-
-## 🗄️ Banco de Dados
-
-O projeto utiliza **Flyway** para controle de versão do banco. As migrations são executadas automaticamente na inicialização.
-
-| Versão | Tipo | Descrição |
-|--------|------|-----------|
-| `V1__estrutura_original.sql` | SQL | Estrutura original das tabelas |
-| `V2__suporte_aplicacao.java` | Java | Perfis de usuário, status das consultas, vínculo de reforços, sequences e índices |
-| `V3__proteger_senhas.java` | Java | Conversão das senhas existentes para hash BCrypt |
-| `V4__notificacoes.sql` | SQL | **Sprint 4** — tabela `TB_FV_NOTIFICACAO` e sequence `FV_SEQ_NOTIFICACAO` |
-
-### Perfis disponíveis
-
-| Perfil | Banco | Uso |
-|--------|-------|-----|
-| `demo` | H2 (em memória) | Desenvolvimento local |
-| `oracle` | Oracle 19c | Produção |
-
-### Executar com Oracle (produção local)
-
-Configure as variáveis de ambiente:
-
-```bash
-export DB_URL=jdbc:oracle:thin:@HOST:1521:SID
-export DB_USER=seu_usuario
-export DB_PASSWORD=sua_senha
-```
-
-Depois execute:
-
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=oracle
-```
-
----
-
-## 📁 Estrutura do Projeto
-
-```
-Challenge_Sprint4_Java/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   ├── com/futurevet/
-│   │   │   │   ├── FutureVetApplication.java  # Classe principal
-│   │   │   │   ├── config/       # Carga de dados demo e primeiro admin
-│   │   │   │   ├── model/        # Entidades (records)
-│   │   │   │   ├── repository/   # Acesso ao banco com JdbcTemplate
-│   │   │   │   ├── security/     # Spring Security, JWT e controle de acesso
-│   │   │   │   ├── service/      # Regras de negócio
-│   │   │   │   └── web/          # Controllers MVC (Thymeleaf)
-│   │   │   │       ├── api/      # Controllers REST
-│   │   │   │       │   └── dto/  # Objetos de entrada e saída da API
-│   │   │   │       └── forms/    # Formulários com Bean Validation
-│   │   │   └── db/migration/     # Migrations Java do Flyway (V2, V3)
-│   │   └── resources/
-│   │       ├── db/migration/     # Migration SQL do Flyway (V1)
-│   │       ├── templates/        # Views Thymeleaf (HTML)
-│   │       ├── static/           # CSS
-│   │       ├── application.properties
-│   │       ├── application-demo.properties
-│   │       └── application-oracle.properties
-│   └── test/java/com/futurevet/  # Testes automatizados
-├── database/                     # Script DDL do banco
-├── render.yaml                   # Configuração de deploy no Render
-├── Dockerfile
-└── pom.xml
-```
-
----
-
-## 📦 Build para produção
-
-```bash
-mvn clean package -DskipTests
-java -jar target/*.jar --spring.profiles.active=oracle
-```
-
----
-
-## 🚀 Sprint 4 — Entrega Final (Java Advanced)
-
-> Tudo o que foi acrescentado nesta sprint sobre o projeto da Sprint 3. O conteúdo acima continua válido.
-
-🎬 **Vídeo da apresentação (até 15 min):** _adicionar o link do YouTube aqui_
-
----
-
-### 💡 Narrativa da solução
-
-#### O problema
+### O problema
 
 Na rotina de uma clínica como a Clyvo Vet, a prevenção se perde em papel e mensagens soltas:
 
@@ -263,7 +55,7 @@ Na rotina de uma clínica como a Clyvo Vet, a prevenção se perde em papel e me
 - o tutor não sabe se a consulta foi confirmada;
 - o histórico do animal fica espalhado.
 
-#### A proposta
+### A proposta
 
 Uma plataforma em que **cada pet tem uma jornada de saúde contínua**:
 
@@ -274,7 +66,7 @@ Uma plataforma em que **cada pet tem uma jornada de saúde contínua**:
 5. **Internacionalização.** A interface inteira, inclusive mensagens de erro e avisos, funciona em português e inglês.
 6. **Monitoramento.** A clínica vê a saúde da aplicação, do banco, da IA e da mensageria em uma tela alimentada pelo **Spring Boot Actuator**.
 
-#### O que torna a solução original
+### O que torna a solução original
 
 - **A IA conhece o pet.** O assistente não é um chat genérico. A aplicação monta um contexto só com os dados que *aquele* usuário pode ver. A pergunta "alguma vacina está atrasada?" é respondida com a situação calculada pelo sistema, e um tutor nunca recebe dados de outro.
 - **O aviso não se perde.** Se o RabbitMQ estiver fora do ar, o produtor entrega o evento direto ao consumidor (*fallback*), e o painel de monitoramento mostra por qual canal cada evento passou.
@@ -282,9 +74,7 @@ Uma plataforma em que **cada pet tem uma jornada de saúde contínua**:
 
 ---
 
----
-
-### 🧭 Como os conceitos da disciplina foram aplicados
+## 🧭 Como os conceitos da disciplina foram aplicados
 
 | Conceito (Java Advanced) | Onde está | Como aparece no app |
 |---|---|---|
@@ -303,9 +93,7 @@ Uma plataforma em que **cada pet tem uma jornada de saúde contínua**:
 
 ---
 
----
-
-### 🏗️ Arquitetura
+## 🏗️ Arquitetura
 
 ```mermaid
 flowchart LR
@@ -338,7 +126,7 @@ flowchart LR
     A -. health .-> IA
 ```
 
-#### Decisões de design e justificativas
+### Decisões de design e justificativas
 
 | Decisão | Por quê |
 |---|---|
@@ -354,9 +142,7 @@ flowchart LR
 
 ---
 
----
-
-### 🔄 Principais fluxos do sistema
+## 🔄 Principais fluxos do sistema
 
 1. **Agendamento:** tutor solicita → evento `CONSULTA_SOLICITADA` → clínica recebe aviso → clínica confirma → evento `CONSULTA_CONFIRMADA` → tutor recebe aviso → após o horário, clínica conclui com resumo.
 2. **Carteira de vacinação:** registrar dose → situação calculada → registrar reforço (próxima dose = data + intervalo; dose anterior vira *histórico*, travada para edição).
@@ -365,11 +151,34 @@ flowchart LR
 
 ---
 
+## 🛠️ Tecnologias
+
+| Tecnologia | Versão | Uso |
+|---|---|---|
+| Java | 17 | Linguagem |
+| Spring Boot | 3.5.16 | Base da aplicação e dos microsserviços |
+| Spring Security + JJWT | 6.5 / 0.12.6 | Sessão (web) e JWT (API) |
+| Spring JDBC + Flyway | — | Persistência e versionamento do banco |
+| Thymeleaf | 3.1 | Interface web |
+| Spring AMQP (RabbitMQ) | 3.2 | Mensageria |
+| Spring Cloud (OpenFeign, Eureka) | 2025.0.3 | Microsserviços |
+| Spring AI | 1.1.8 | Assistente com modelo de linguagem |
+| Spring Boot Actuator / Micrometer | — | Monitoramento |
+| Springdoc OpenAPI | 2.8.17 | Swagger da API |
+| Oracle Database / H2 | 19c / 2.x | Produção / demonstração e testes |
+
 ---
 
-### ⚙️ Como executar
+## ⚙️ Como executar
 
-#### Opção 1 — Arquitetura completa com Docker (recomendado)
+### Antes de tudo: clonar o repositório
+
+```bash
+git clone https://github.com/joaocaetano1310/Challenge_Sprint4_Java.git
+cd Challenge_Sprint4_Java
+```
+
+### Opção 1 — Arquitetura completa com Docker (recomendado)
 
 Sobe **RabbitMQ + Eureka + IA + aplicação**:
 
@@ -385,19 +194,19 @@ docker compose up --build
 | Painel do RabbitMQ | http://localhost:15672 (guest / guest) |
 | Swagger | http://localhost:8080/swagger-ui/index.html |
 
-#### Opção 2 — Sem Docker (Windows)
+### Opção 2 — Sem Docker (Windows)
 
 Requisito: Java 17 ou superior. Dê dois cliques em `iniciar-demo.cmd` (Linux/macOS: `./iniciar-demo.sh`).
 
 O script compila e sobe **Eureka + IA + aplicação**. Sem RabbitMQ instalado, os avisos são entregues em modo local.
 
-#### Opção 3 — Só a aplicação principal
+### Opção 3 — Só a aplicação principal
 
 ```bash
 ./mvnw spring-boot:run          # perfil demo (H2). O assistente mostrará "indisponível".
 ```
 
-#### Testes
+### Testes
 
 ```bash
 ./mvnw verify                                        # aplicação principal (38 testes)
@@ -406,9 +215,7 @@ O script compila e sobe **Eureka + IA + aplicação**. Sem RabbitMQ instalado, o
 
 ---
 
----
-
-### 🔐 Variáveis de ambiente
+## 🔐 Variáveis de ambiente
 
 | Variável | Padrão | Função |
 |---|---|---|
@@ -424,9 +231,40 @@ O script compila e sobe **Eureka + IA + aplicação**. Sem RabbitMQ instalado, o
 
 ---
 
+## 🔌 API REST (app mobile)
+
+Autenticação: `POST /api/auth/login` devolve o token. Envie o token como `Authorization: Bearer <token>` nas demais rotas.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/auth/login` · `/api/auth/registro` | Login e cadastro de tutor |
+| GET/POST/PUT/DELETE | `/api/animais` | CRUD de animais |
+| GET/POST/PUT/DELETE | `/api/vacinas` · POST `/api/vacinas/{id}/reforco` | Carteira de vacinação |
+| GET/POST/PUT | `/api/consultas` · POST `/{id}/confirmar` `/cancelar` `/concluir` | Agenda |
+| GET | `/api/notificacoes` · `/api/notificacoes/nao-lidas` · POST `/lidas` | **Sprint 4** — avisos |
+| POST | `/api/assistente` | **Sprint 4** — pergunta ao Assistente Vet |
+| GET | `/actuator/health` · `/actuator/info` | **Sprint 4** — saúde (público) |
+
+Documentação interativa: `/swagger-ui/index.html`.
+
 ---
 
-### 🤝 Integração multidisciplinar
+## 🗄️ Banco de dados
+
+O **Flyway** aplica as migrations automaticamente:
+
+| Versão | Descrição |
+|---|---|
+| `V1__estrutura_original.sql` | Estrutura original das tabelas (Sprint 1) |
+| `V2__suporte_aplicacao.java` | Perfis, status das consultas, vínculo de reforços, sequences e índices |
+| `V3__proteger_senhas.java` | Conversão das senhas para hash BCrypt |
+| `V4__notificacoes.sql` | **Sprint 4** — `TB_FV_NOTIFICACAO` e sequence `FV_SEQ_NOTIFICACAO` |
+
+Procedimento seguro para o Oracle da FIAP: [docs/ORACLE.md](docs/ORACLE.md).
+
+---
+
+## 🤝 Integração multidisciplinar
 
 | Disciplina | Como se conecta ao FutureVet | Evidência |
 |---|---|---|
@@ -438,45 +276,42 @@ O script compila e sobe **Eureka + IA + aplicação**. Sem RabbitMQ instalado, o
 
 ---
 
----
-
-### Novos pacotes da Sprint 4
+## 📁 Estrutura do projeto
 
 ```
-src/main/java/com/futurevet/
-├── ia/                   # Cliente OpenFeign, contexto e conversa do Assistente Vet
-├── internacionalizacao/  # LocaleResolver, troca de idioma e resolução de mensagens
-├── mensageria/           # RabbitMQ: configuração, produtor e consumidor de eventos
-└── monitoramento/        # Leitura das métricas do Actuator
-microsservicos/
-├── futurevet-ia/         # Microsserviço Spring AI (porta 8082)
-└── servidor-eureka/      # Service discovery (porta 8761)
-docs/                     # Arquitetura, Oracle, validação e roteiro do vídeo
-docker-compose.yml        # RabbitMQ + Eureka + IA + aplicação
+Challenge_Sprint4_Java/
+├── src/main/java/com/futurevet/
+│   ├── config/               # Dados de demonstração e primeiro administrador
+│   ├── ia/                   # Cliente OpenFeign, contexto e conversa do Assistente Vet
+│   ├── internacionalizacao/  # LocaleResolver, troca de idioma e resolução de mensagens
+│   ├── mensageria/           # RabbitMQ: configuração, produtor e consumidor de eventos
+│   ├── model/                # Records e enums do domínio
+│   ├── monitoramento/        # Leitura das métricas do Actuator
+│   ├── repository/           # SQL com JdbcTemplate
+│   ├── security/             # Spring Security, JWT e verificação de dono
+│   ├── service/              # Regras de negócio
+│   └── web/                  # Controllers MVC, API REST (web/api) e formulários
+├── src/main/resources/
+│   ├── db/migration/         # Flyway (V1, V4) — V2 e V3 estão em src/main/java/db/migration
+│   ├── templates/            # Telas Thymeleaf
+│   ├── mensagens.properties  # Textos em português
+│   └── mensagens_en.properties
+├── microsservicos/
+│   ├── futurevet-ia/         # Microsserviço Spring AI (porta 8082)
+│   └── servidor-eureka/      # Service discovery (porta 8761)
+├── docs/                     # Arquitetura, Oracle, validação e roteiro do vídeo
+├── docker-compose.yml
+├── render.yaml
+└── iniciar-demo.cmd / .sh
 ```
 
 ---
 
-### 📚 Documentação complementar
+## 📚 Documentação complementar
 
 - [docs/ARQUITETURA.md](docs/ARQUITETURA.md) — guia para entender e explicar cada camada
 - [docs/ORACLE.md](docs/ORACLE.md) — como aplicar as migrations no Oracle com segurança
 - [docs/VALIDACAO.md](docs/VALIDACAO.md) — o que foi testado e como
 - [docs/ROTEIRO-VIDEO.md](docs/ROTEIRO-VIDEO.md) — roteiro da apresentação de 15 minutos
 
----
-
-## 📌 Links Importantes
-
-- 🔗 **Repositório GitHub:** https://github.com/joaocaetano1310/Challenge_Sprint4_Java
-- 🌐 **Aplicação em produção:** https://challenge-sprint3-java.onrender.com
-- 🤖 **Microsserviço de IA (Sprint 4):** https://futurevet-ia.onrender.com/actuator/health
-- 📱 **App mobile:** https://github.com/Felipe-Furlanetto0504/Challenge-FutureVet-Mobile
-- 📡 **IoT (coleira PetLink):** https://github.com/Buenozw/CHALLENGE---IOT
-- 🎬 **Vídeo demonstrativo:** https://youtu.be/jWtMZDGaDf8
-
----
-
-<p align="center">
-  Desenvolvido com ❤️ para o Challenge FIAP 2026 — 2º Semestre
-</p>
+<p align="center">Desenvolvido para o Challenge FIAP 2026 — 2º Semestre · Clyvo Vet</p>
