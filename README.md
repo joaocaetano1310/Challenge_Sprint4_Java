@@ -14,9 +14,9 @@ O FutureVet aproxima tutores e clínica no cuidado contínuo dos pets. Em um só
 | 💻 Repositório GitHub | https://github.com/joaocaetano1310/Challenge_Sprint4_Java |
 | 🌐 Aplicação online (deploy) | https://challenge-sprint3-java.onrender.com |
 | 🤖 Microsserviço de IA (deploy) | https://futurevet-ia.onrender.com/actuator/health |
-| 🎬 Vídeo da apresentação (até 15 min) | _adicionar o link do YouTube aqui_ |
-   | 📱 App mobile (consome a API) | https://github.com/Felipe-Furlanetto0504/Challenge-FutureVet-Mobile |
-   | 📡 IoT (coleira PetLink) | https://github.com/Buenozw/CHALLENGE---IOT |
+| 🎬 Vídeo da apresentação (até 15 min) | https://youtu.be/O-y-bdhvFW8 |
+| 📱 App mobile (consome a API) | https://github.com/Felipe-Furlanetto0504/Challenge-FutureVet-Mobile |
+| 📡 IoT (coleira PetLink) | https://github.com/Buenozw/CHALLENGE---IOT |
 
 > ⚠️ No plano gratuito do Render, o primeiro acesso depois de um tempo parado pode levar até 60 segundos.
 
